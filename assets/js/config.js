@@ -14,7 +14,7 @@ export const CONFIG = {
     SCOOTER_RADIUS: 4,     // 碰撞半徑
     
     // Boids 演算法權重基礎值
-    SEPARATION_DIST: 12,   // 避障排斥距離
+    SEPARATION_DIST: 20,   // 避障排斥距離（需大於車身對角線約14px）
     ALIGNMENT_DIST: 40,    // 對齊前車距離
     
     // 預設控制面板參數
