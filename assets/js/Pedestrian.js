@@ -37,7 +37,8 @@ export class Pedestrian {
         }
     }
 
-    update(scooters, lightState, roadEndX) {
+    update(scooters, lightState, roadEndX, walkingManState = 'slow') {
+        const speedMult = { slow: 1.0, fast: 1.3, run: 1.6, fall: 1.0 }[walkingManState] ?? 1.0;
         const walkSignal = this.type === 'annoying' ? true : (lightState === 'red');
 
         if (this.type === 'annoying' && Math.random() < 0.005) {
@@ -65,7 +66,7 @@ export class Pedestrian {
             if (this.phoneTimer > 0) {
                 this.phoneTimer--;
             } else {
-                this.position.x += this.speed;
+                this.position.x += this.speed * speedMult;
                 if (this.position.x > roadEndX) this.position.x = roadEndX;
             }
         } else if (this.state === 'retreating') {

@@ -14,7 +14,24 @@ export class Environment {
     get laneLineSolid() {
         if (this.laneLineMode === 'forced-solid') return true;
         if (this.laneLineMode === 'forced-dashed') return false;
-        return this.lightState !== 'green'; // 自動：紅/黃 = 實線，綠 = 虛線
+        return this.lightState !== 'green';
+    }
+
+    // 小綠人狀態：依紅燈已過比例決定
+    get walkingManState() {
+        if (this.lightState !== 'red') return 'stop';
+        if (this.mode !== 'auto') return 'slow'; // 強制模式無倒數
+        const ratio = this.frames / this.redDuration;
+        if (ratio < 0.4) return 'slow';
+        if (ratio < 0.7) return 'fast';
+        if (ratio < 0.9) return 'run';
+        return 'fall';
+    }
+
+    // 行人通行剩餘秒數
+    get pedSecondsLeft() {
+        if (this.lightState !== 'red' || this.mode !== 'auto') return 0;
+        return Math.max(0, Math.ceil((this.redDuration - this.frames) / 60));
     }
 
     update() {

@@ -173,6 +173,93 @@ function drawEnvironment() {
     ctx.beginPath(); ctx.arc(roadStartX - 25, stopLineY + 10, 5, 0, Math.PI * 2); ctx.fill();
 
     ctx.shadowBlur = 0;
+
+    // 7. 小綠人燈柱（道路右側，對稱於左側紅綠燈）
+    drawWalkingMan(stopLineY, roadEndX);
+}
+
+function drawWalkingMan(stopLineY, roadEndX) {
+    const state = env.walkingManState;
+    const cx = roadEndX + 25;
+
+    // 燈柱底座
+    ctx.fillStyle = '#1f2937';
+    ctx.beginPath();
+    ctx.roundRect(cx - 10, stopLineY - 30, 20, 50, 4);
+    ctx.fill();
+
+    // 信號燈背景
+    ctx.fillStyle = state !== 'stop' ? '#14532d' : '#450a0a';
+    ctx.beginPath();
+    ctx.roundRect(cx - 8, stopLineY - 28, 16, 34, 3);
+    ctx.fill();
+
+    // 閃爍邏輯
+    const flash = (state === 'fall' && frameCount % 8 < 4) ||
+                  (state === 'run'  && frameCount % 14 < 3);
+    if (!flash) {
+        _drawWalkingFigure(cx, stopLineY - 11, state);
+    }
+
+    // 倒計時秒數
+    const secs = env.pedSecondsLeft;
+    if (secs > 0) {
+        ctx.fillStyle = secs <= 5 ? '#ef4444' : '#4ade80';
+        ctx.font = 'bold 10px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(secs, cx, stopLineY + 26);
+    }
+}
+
+function _drawWalkingFigure(cx, cy, state) {
+    ctx.save();
+    ctx.translate(cx, cy);
+
+    if (state === 'fall') ctx.rotate(0.65);
+    else if (state === 'run') ctx.rotate(-0.18);
+
+    const color = state !== 'stop' ? '#4ade80' : '#ef4444';
+    ctx.fillStyle = color;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+
+    // 頭
+    ctx.beginPath();
+    ctx.arc(0, -9, 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 身體
+    ctx.beginPath();
+    ctx.moveTo(0, -6);
+    ctx.lineTo(0, 2);
+    ctx.stroke();
+
+    if (state === 'stop') {
+        // 靜止紅人：雙手平伸，雙腳並攏
+        ctx.beginPath(); ctx.moveTo(-5, -3); ctx.lineTo(5, -3); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, 2); ctx.lineTo(-2, 9); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, 2); ctx.lineTo(2, 9); ctx.stroke();
+    } else {
+        // 行走動畫：用 frameCount 讓腳擺動
+        const speeds  = { slow: 0.08, fast: 0.16, run: 0.26, fall: 0 };
+        const spreads = { slow: 3, fast: 5, run: 6, fall: 4 };
+        const sp = spreads[state] || 3;
+        const phase = state === 'fall' ? 0.6 : Math.sin(frameCount * (speeds[state] || 0.08));
+
+        // 手臂（反向擺）
+        ctx.beginPath();
+        ctx.moveTo(-5 - phase * sp * 0.4, -4);
+        ctx.lineTo( 5 + phase * sp * 0.4, -1);
+        ctx.stroke();
+
+        // 腳（交替）
+        ctx.beginPath();
+        ctx.moveTo(0, 2); ctx.lineTo(-2 + phase * sp, 9); ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(0, 2); ctx.lineTo( 2 - phase * sp, 9); ctx.stroke();
+    }
+
+    ctx.restore();
 }
 
 function gameLoop() {
@@ -193,7 +280,7 @@ function gameLoop() {
     // 更新、繪製、消滅行人
     for (let i = pedestrians.length - 1; i >= 0; i--) {
         const ped = pedestrians[i];
-        ped.update(scooters, env.lightState, roadEndX);
+        ped.update(scooters, env.lightState, roadEndX, env.walkingManState);
         ped.draw(ctx);
         if (ped.isDone(roadEndX, env.lightState)) {
             pedestrians.splice(i, 1);
