@@ -20,5 +20,9 @@ export const CONFIG = {
     // 預設控制面板參數
     SPAWN_RATE: 10,
     AGGRESSIVE_RATIO: 0.3,
-    CLUELESS_RATIO: 0.05
+    CLUELESS_RATIO: 0.05,
+
+    // 行人設定
+    PEDESTRIAN_SPAWN_RATE: 3,
+    ANNOYING_RATIO: 0.15
 };
