@@ -7,6 +7,7 @@ export const CONFIG = {
     // 道路設定 (假設機車由上往下行駛)
     ROAD_WIDTH_RATIO: 0.6, // 道路佔畫面的寬度比例
     STOP_LINE_Y: 0.8,      // 停止線在畫面的 Y 軸比例 (80% 處)
+    LANE_COUNT: 4,
 
     // 機車物理預設值
     MAX_SPEED: 4,

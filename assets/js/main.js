@@ -65,6 +65,10 @@ function setupUIControls() {
     document.getElementById('btn-red').addEventListener('click', () => env.setMode('force-red'));
     document.getElementById('btn-green').addEventListener('click', () => env.setMode('force-green'));
 
+    document.getElementById('btn-lane-auto').addEventListener('click', () => env.setLaneLineMode('auto'));
+    document.getElementById('btn-lane-solid').addEventListener('click', () => env.setLaneLineMode('forced-solid'));
+    document.getElementById('btn-lane-dashed').addEventListener('click', () => env.setLaneLineMode('forced-dashed'));
+
     const pedSpawnInput = document.getElementById('ped-spawn-rate');
     const pedSpawnVal = document.getElementById('ped-spawn-rate-val');
     pedSpawnInput.addEventListener('input', (e) => {
@@ -99,47 +103,76 @@ function drawEnvironment() {
     const roadStartX = (canvas.width - roadWidth) / 2;
     const roadEndX = roadStartX + roadWidth;
     const stopLineY = canvas.height * CONFIG.STOP_LINE_Y;
-    
-    // 1. 畫柏油路
-    ctx.fillStyle = '#374151'; 
+    const laneW = roadWidth / CONFIG.LANE_COUNT;
+
+    // 1. 路面
+    ctx.fillStyle = '#374151';
     ctx.fillRect(roadStartX, 0, roadWidth, canvas.height);
 
-    // 2. 畫停止線
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(roadStartX, stopLineY, roadWidth, 8);
+    // 2. 車道線
+    const solid = env.laneLineSolid;
+    for (let i = 1; i < CONFIG.LANE_COUNT; i++) {
+        const x = roadStartX + laneW * i;
+        const isCenter = (i === CONFIG.LANE_COUNT / 2); // 中央分隔
 
-    // 3. 畫斑馬線 (Zebra Crossing)
-    ctx.fillStyle = '#e5e7eb'; // 淺灰白
-    for (let x = roadStartX + 5; x < roadEndX; x += 25) {
-        ctx.fillRect(x, stopLineY + 15, 10, 30);
+        if (isCenter) {
+            // 雙黃線
+            ctx.setLineDash([]);
+            ctx.strokeStyle = '#facc15';
+            ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(x - 3, 0); ctx.lineTo(x - 3, canvas.height); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(x + 3, 0); ctx.lineTo(x + 3, canvas.height); ctx.stroke();
+        } else {
+            // 白虛線（或實線）
+            ctx.setLineDash(solid ? [] : [14, 10]);
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+        }
+    }
+    ctx.setLineDash([]);
+
+    // 3. 雙白線邊緣
+    ctx.fillStyle = '#e5e7eb';
+    ctx.fillRect(roadStartX,     0, 2, canvas.height);
+    ctx.fillRect(roadStartX + 5, 0, 2, canvas.height);
+    ctx.fillRect(roadEndX - 7,   0, 2, canvas.height);
+    ctx.fillRect(roadEndX - 2,   0, 2, canvas.height);
+
+    // 4. 停止線
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(roadStartX, stopLineY, roadWidth, 6);
+
+    // 5. 斑馬線
+    ctx.fillStyle = '#d1d5db';
+    for (let x = roadStartX + 5; x < roadEndX; x += 20) {
+        ctx.fillRect(x, stopLineY + 12, 8, 24);
     }
 
-    // 4. 畫實體三色紅綠燈柱 (在左側)
-    ctx.fillStyle = '#1f2937'; // 深灰底座
+    // 6. 紅綠燈柱
+    ctx.fillStyle = '#1f2937';
     ctx.roundRect(roadStartX - 35, stopLineY - 30, 20, 50, 4);
     ctx.fill();
-    
-    // 燈號判定
+
     const isR = env.lightState === 'red';
     const isY = env.lightState === 'yellow';
     const isG = env.lightState === 'green';
 
-    // 紅燈
     ctx.fillStyle = isR ? '#ef4444' : '#450a0a';
-    if(isR) ctx.shadowColor = '#ef4444'; ctx.shadowBlur = isR ? 10 : 0;
-    ctx.beginPath(); ctx.arc(roadStartX - 25, stopLineY - 20, 5, 0, Math.PI*2); ctx.fill();
-    
-    // 黃燈
+    if (isR) { ctx.shadowColor = '#ef4444'; ctx.shadowBlur = 10; }
+    ctx.beginPath(); ctx.arc(roadStartX - 25, stopLineY - 20, 5, 0, Math.PI * 2); ctx.fill();
+
+    ctx.shadowBlur = 0;
     ctx.fillStyle = isY ? '#facc15' : '#422006';
-    if(isY) ctx.shadowColor = '#facc15'; ctx.shadowBlur = isY ? 10 : 0;
-    ctx.beginPath(); ctx.arc(roadStartX - 25, stopLineY - 5, 5, 0, Math.PI*2); ctx.fill();
-    
-    // 綠燈
+    if (isY) { ctx.shadowColor = '#facc15'; ctx.shadowBlur = 10; }
+    ctx.beginPath(); ctx.arc(roadStartX - 25, stopLineY - 5, 5, 0, Math.PI * 2); ctx.fill();
+
+    ctx.shadowBlur = 0;
     ctx.fillStyle = isG ? '#22c55e' : '#052e16';
-    if(isG) ctx.shadowColor = '#22c55e'; ctx.shadowBlur = isG ? 10 : 0;
-    ctx.beginPath(); ctx.arc(roadStartX - 25, stopLineY + 10, 5, 0, Math.PI*2); ctx.fill();
-    
-    ctx.shadowBlur = 0; // 重置陰影避免影響其他繪圖
+    if (isG) { ctx.shadowColor = '#22c55e'; ctx.shadowBlur = 10; }
+    ctx.beginPath(); ctx.arc(roadStartX - 25, stopLineY + 10, 5, 0, Math.PI * 2); ctx.fill();
+
+    ctx.shadowBlur = 0;
 }
 
 function gameLoop() {
