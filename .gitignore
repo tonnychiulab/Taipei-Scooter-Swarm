@@ -1,0 +1,6 @@
+# 討論文件（本地保留，不推遠端）
+docs/
+
+# Claude Code 工作目錄
+.claude/
+.superpowers/
