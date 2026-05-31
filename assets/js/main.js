@@ -2,7 +2,8 @@
 import { CONFIG } from './config.js';
 import { Motorcycle } from './Motorcycle.js';
 import { Environment } from './Environment.js';
-import { Pedestrian } from './Pedestrian.js'; // 引入行人
+import { Pedestrian } from './Pedestrian.js';
+import { QuadTree, Rectangle } from './QuadTree.js';
 
 const canvas = document.getElementById('simulation-canvas');
 const ctx = canvas.getContext('2d');
@@ -140,9 +141,12 @@ function gameLoop() {
     let spawnInterval = Math.max(1, Math.floor(60 / CONFIG.SPAWN_RATE));
     if (frameCount % spawnInterval === 0) spawnScooter();
 
+    const qtree = new QuadTree(new Rectangle(canvas.width / 2, canvas.height / 2, canvas.width / 2, canvas.height / 2));
+    scooters.forEach(s => qtree.insert(s));
+
     for (let i = scooters.length - 1; i >= 0; i--) {
         let scooter = scooters[i];
-        scooter.steer(scooters, env.lightState, pedestrians);
+        scooter.steer(qtree, env.lightState, pedestrians);
         scooter.update();
         scooter.draw(ctx);
 

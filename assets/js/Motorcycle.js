@@ -1,7 +1,8 @@
 // assets/js/Motorcycle.js
 import { Vector2D } from './Vector2D.js';
 import { CONFIG } from './config.js';
-import { ScooterModel } from './ScooterModel.js'; // 1. 引入車型渲染器
+import { ScooterModel } from './ScooterModel.js';
+import { Rectangle } from './QuadTree.js';
 
 export class Motorcycle {
     constructor(x, y, type = 'normal') {
@@ -45,8 +46,8 @@ export class Motorcycle {
         this.acceleration.add(force);
     }
 
-    steer(scooters, lightState, pedestrians) {
-        let separation = this.separate(scooters);
+    steer(qtree, lightState, pedestrians) {
+        let separation = this.separate(qtree);
         let seek = this.seekTarget(lightState);
         let avoidPed = this.avoidPedestrians(pedestrians);
 
@@ -92,14 +93,17 @@ export class Motorcycle {
         return steer;
     }
 
-    separate(scooters) {
+    separate(qtree) {
         let steer = new Vector2D(0, 0);
         let count = 0;
         let desiredSeparation = (this.type === 'aggressive') ? CONFIG.SEPARATION_DIST * 0.4 : CONFIG.SEPARATION_DIST;
 
-        for (let other of scooters) {
+        const range = new Rectangle(this.position.x, this.position.y, desiredSeparation, desiredSeparation);
+        const neighbors = qtree.query(range);
+
+        for (let other of neighbors) {
             let d = this.position.dist(other.position);
-            if ((d > 0) && (d < desiredSeparation)) {
+            if (d > 0 && d < desiredSeparation) {
                 let diff = Vector2D.sub(this.position, other.position);
                 diff.normalize().div(d);
                 steer.add(diff);
