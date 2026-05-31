@@ -24,7 +24,7 @@ function spawnPedestrian() {
     const roadWidth = canvas.width * CONFIG.ROAD_WIDTH_RATIO;
     const roadStartX = (canvas.width - roadWidth) / 2;
     const stopLineY = canvas.height * CONFIG.STOP_LINE_Y;
-    const spawnY = stopLineY + (Math.random() * 40 - 20);
+    const spawnY = stopLineY + 15 + Math.random() * 20; // 對齊斑馬線範圍 (+15 ~ +45)
 
     let type;
     if (Math.random() < CONFIG.ANNOYING_RATIO) {
