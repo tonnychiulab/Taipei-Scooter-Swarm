@@ -44,6 +44,24 @@
             <input type="range" id="clueless-ratio" min="0" max="50" value="5" class="w-full accent-purple-400">
         </div>
 
+        <!-- 控制項：行人流量 -->
+        <div class="control-group">
+            <label class="block text-sm font-medium mb-2 flex justify-between">
+                <span>行人流量 (每分鐘)</span>
+                <span id="ped-spawn-rate-val" class="text-green-400">3</span>
+            </label>
+            <input type="range" id="ped-spawn-rate" min="1" max="10" value="3" class="w-full accent-green-400">
+        </div>
+
+        <!-- 控制項：討厭行人比例 -->
+        <div class="control-group">
+            <label class="block text-sm font-medium mb-2 flex justify-between">
+                <span>討厭行人比例 (%)</span>
+                <span id="annoying-ratio-val" class="text-red-400">15</span>
+            </label>
+            <input type="range" id="annoying-ratio" min="0" max="50" value="15" class="w-full accent-red-400">
+        </div>
+
         <!-- 交通號誌強制控制 -->
         <div class="control-group mt-auto pt-6 border-t border-gray-700">
             <p class="block text-sm font-medium mb-3">交通號誌覆寫</p>
