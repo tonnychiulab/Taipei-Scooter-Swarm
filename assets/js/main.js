@@ -17,20 +17,26 @@ function init() {
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
     setupUIControls();
-    
-    // 初始化一個行人
-    initPedestrians();
-
     requestAnimationFrame(gameLoop);
 }
 
-function initPedestrians() {
+function spawnPedestrian() {
     const roadWidth = canvas.width * CONFIG.ROAD_WIDTH_RATIO;
     const roadStartX = (canvas.width - roadWidth) / 2;
     const stopLineY = canvas.height * CONFIG.STOP_LINE_Y;
-    
-    // 將行人放在道路左側邊緣，斑馬線上
-    pedestrians.push(new Pedestrian(roadStartX - 10, stopLineY + 25));
+    const spawnY = stopLineY + (Math.random() * 40 - 20);
+
+    let type;
+    if (Math.random() < CONFIG.ANNOYING_RATIO) {
+        type = 'annoying';
+    } else {
+        const r = Math.random();
+        if (r < 0.33) type = 'elderly';
+        else if (r < 0.66) type = 'wheelchair';
+        else type = 'normal';
+    }
+
+    pedestrians.push(new Pedestrian(roadStartX - 10, spawnY, type));
 }
 
 function resizeCanvas() {
@@ -58,6 +64,20 @@ function setupUIControls() {
     document.getElementById('btn-auto').addEventListener('click', () => env.setMode('auto'));
     document.getElementById('btn-red').addEventListener('click', () => env.setMode('force-red'));
     document.getElementById('btn-green').addEventListener('click', () => env.setMode('force-green'));
+
+    const pedSpawnInput = document.getElementById('ped-spawn-rate');
+    const pedSpawnVal = document.getElementById('ped-spawn-rate-val');
+    pedSpawnInput.addEventListener('input', (e) => {
+        pedSpawnVal.textContent = e.target.value;
+        CONFIG.PEDESTRIAN_SPAWN_RATE = parseInt(e.target.value);
+    });
+
+    const annoyingInput = document.getElementById('annoying-ratio');
+    const annoyingVal = document.getElementById('annoying-ratio-val');
+    annoyingInput.addEventListener('input', (e) => {
+        annoyingVal.textContent = e.target.value;
+        CONFIG.ANNOYING_RATIO = parseInt(e.target.value) / 100;
+    });
 }
 
 function spawnScooter() {
@@ -131,12 +151,21 @@ function gameLoop() {
 
     const roadWidth = canvas.width * CONFIG.ROAD_WIDTH_RATIO;
     const roadStartX = (canvas.width - roadWidth) / 2;
+    const roadEndX = roadStartX + roadWidth;
 
-    // 更新與繪製行人
-    pedestrians.forEach(ped => {
-        ped.update(scooters, env.lightState, roadStartX + roadWidth);
+    // 行人生成節奏：每 (3600 / SPAWN_RATE) 幀生成一人
+    const pedSpawnInterval = Math.max(1, Math.floor(3600 / CONFIG.PEDESTRIAN_SPAWN_RATE));
+    if (frameCount % pedSpawnInterval === 0) spawnPedestrian();
+
+    // 更新、繪製、消滅行人
+    for (let i = pedestrians.length - 1; i >= 0; i--) {
+        const ped = pedestrians[i];
+        ped.update(scooters, env.lightState, roadEndX);
         ped.draw(ctx);
-    });
+        if (ped.isDone(roadEndX, env.lightState)) {
+            pedestrians.splice(i, 1);
+        }
+    }
 
     let spawnInterval = Math.max(1, Math.floor(60 / CONFIG.SPAWN_RATE));
     if (frameCount % spawnInterval === 0) spawnScooter();
