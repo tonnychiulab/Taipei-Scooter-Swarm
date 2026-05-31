@@ -80,8 +80,9 @@ export class Motorcycle {
     avoidPedestrians(pedestrians) {
         let steer = new Vector2D(0, 0);
         for (let p of pedestrians) {
+            const avoidDist = p.type === 'wheelchair' ? 80 : 40;
             let d = this.position.dist(p.position);
-            if (d < 40) { 
+            if (d < avoidDist) {
                 let diff = Vector2D.sub(this.position, p.position);
                 diff.normalize().div(d);
                 steer.add(diff);
